@@ -1,13 +1,13 @@
-name: HYP DEMO — manual smoke test only
+name: HYP DEMO — one-click sandbox only
 on:
   workflow_dispatch:
 permissions:
   contents: read
 jobs:
   demo:
-    if: github.ref == 'refs/heads/main' && github.repository_owner == 'Trekyourway'
+    if: github.ref == 'refs/heads/main' && github.repository == 'Trekyourway/invoicing'
     runs-on: ubuntu-latest
-    environment: hyp-demo
+    timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
         with:
@@ -15,14 +15,18 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - run: npm install --ignore-scripts --no-audit --no-fund
-      - run: npm run smoke:demo
+      - name: Verify HYP sandbox credential is present
+        env:
+          HYP_API_KEY: ${{ secrets.HYP_DEMO_API_KEY }}
+        run: test -n "$HYP_API_KEY" || { echo "::error::Missing HYP_DEMO_API_KEY GitHub Secret"; exit 1; }
+      - name: Issue one HYP DEMO receipt and request email to owner inbox
+        run: node src/demo-smoke.mjs
         env:
           HYP_ENV: sandbox
-          HYP_ENABLE_LIVE: YES
-          HYP_ALLOW_PRODUCTION: NO
+          HYP_ENABLE_LIVE: 'YES'
+          HYP_ALLOW_PRODUCTION: 'NO'
           HYP_API_KEY: ${{ secrets.HYP_DEMO_API_KEY }}
-          HYP_API_EMAIL: ${{ secrets.HYP_DEMO_API_EMAIL }}
-          HYP_DEVELOPER_EMAIL: ${{ secrets.HYP_DEMO_DEVELOPER_EMAIL }}
-          HYP_PAYMENT_CODES_JSON: ${{ secrets.HYP_DEMO_PAYMENT_CODES_JSON }}
-          DEMO_RECIPIENT_EMAIL: ${{ secrets.DEMO_RECIPIENT_EMAIL }}
+          HYP_API_EMAIL: 'yourwaytrek@gmail.com'
+          HYP_DEVELOPER_EMAIL: 'yourwaytrek@gmail.com'
+          HYP_PAYMENT_CODES_JSON: '{"other":9}'
+          DEMO_RECIPIENT_EMAIL: 'yourwaytrek@gmail.com'
