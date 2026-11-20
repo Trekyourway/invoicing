@@ -33,6 +33,17 @@ export function normalizedPayment(raw) {
   o.source_key=crypto.createHash('sha256').update(`${o.source_provider}\0${o.source_reference}`).digest('hex');
   return o;
 }
+// Source IDs are idempotency keys. An altered retry must not silently receive a
+// success response for somebody else's receipt, even if the amount is unchanged.
+export function conflictingSubmission(existing,incoming) {
+  for (const field of ['customer_name','customer_email','description','amount_ils','payment_date','payment_method']) {
+    const left=existing?.[field],right=incoming?.[field];
+    if (left===null||left===undefined||left===''||right===null||right===undefined||right==='')continue;
+    if(field==='amount_ils') {if(Number(left)!==Number(right))return true;}
+    else if(String(left).trim().toLowerCase()!==String(right).trim().toLowerCase())return true;
+  }
+  return false;
+}
 export function assertReadyForVerification(p) {
   if(!p.customer_name||!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(p.customer_email||'')||!p.description||!p.amount_ils||!p.payment_date||!METHODS.has(p.payment_method)) throw new Error('customer, email, description, amount, date and method are required');
   if(p.source_provider==='drive'&&!p.evidence_file_id)throw new Error('evidence file id required');

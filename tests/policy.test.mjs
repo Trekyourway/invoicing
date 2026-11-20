@@ -17,3 +17,11 @@ test('provider explicit false never considered success',()=>assert.equal(sanityP
 test('ambiguous provider 200 never considered success',()=>assert.equal(sanityProviderResult({status:'ok',pdf_link:'x'}).status,'ISSUANCE_UNKNOWN'));
 test('provider success requires reference',()=>assert.equal(sanityProviderResult({success:true}).status,'ISSUANCE_UNKNOWN'));
 test('provider success accepts document',()=>assert.equal(sanityProviderResult({success:true,doc_uuid:'D1'}).status,'ISSUED'));
+
+test('a repeated source ID with a changed recipient must be flagged as a conflict', async()=>{
+  const {conflictingSubmission}=await import('../src/policy.mjs');
+  assert.equal(conflictingSubmission({...p,amount_ils:'400.00'},{...p,customer_email:'different@example.com'}),true);
+  assert.equal(conflictingSubmission({...p,amount_ils:'400.00'},{...p,customer_name:'Other Customer'}),true);
+  assert.equal(conflictingSubmission({...p,amount_ils:'400.00'},{...p,amount_ils:401}),true);
+  assert.equal(conflictingSubmission({...p,amount_ils:'400.00'},{...p,amount_ils:400}),false);
+});

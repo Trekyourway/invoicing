@@ -1,5 +1,5 @@
 import crypto from 'node:crypto';
-import {normalizedPayment, assertReadyForVerification} from './policy.mjs';
+import {normalizedPayment, assertReadyForVerification, conflictingSubmission} from './policy.mjs';
 let pool;
 function config(multipleStatements=false){
  for(const k of ['DB_NAME','DB_USER','DB_PASSWORD'])if(!process.env[k])throw new Error(`Missing ${k}`);
@@ -15,7 +15,7 @@ export async function createPayment(raw){
  [id,p.source_provider,p.source_reference,p.source_key,p.customer_name||null,p.customer_email||null,p.description||null,p.amount_ils,p.payment_date,p.payment_method,p.evidence_file_id||null]);
  const [rows]=await db.execute('SELECT * FROM payments WHERE source_key=?',[p.source_key]);
  const found=rows[0];
- if(found.id!==id && p.amount_ils!==null && found.amount_ils!==null && Number(found.amount_ils)!==p.amount_ils) return {id:found.id,status:'SOURCE_CONFLICT_NEEDS_REVIEW',created:false};
+ if(found.id!==id && conflictingSubmission(found,p)) return {id:found.id,status:'SOURCE_CONFLICT_NEEDS_REVIEW',created:false};
  if(found.id===id){await db.execute('INSERT INTO audit_events(payment_id,action,actor) VALUES (?,?,?)',[id,'CREATED','system']);}
  return {id:found.id,status:found.status,created:found.id===id};
 }
