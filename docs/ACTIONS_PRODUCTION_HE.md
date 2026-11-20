@@ -13,7 +13,7 @@
 
 ## הפעלה ראשונה (שתי הגדרות בלבד)
 
-1. **מפתח Production של HYP:** GitHub Actions קורא `HYP_PRODUCTION_API_KEY`. חובה להכניס **מפתח API פרודקשן אמיתי**, מתוך מסך API בחשבון HYP. המחרוזת שהופיעה בקישור PayPal IPN אינה מפתח API: ניסיון בדיקת DEMO עם אותו מזהה נכשל ונשלחה הודעת שגיאה. אין להעתיק ערכי PayPal IPN. את המפתח הנכון שומרים תחת `HYP_PRODUCTION_API_KEY` בלבד. אין לשמור מפתחות בקוד ציבורי.
+1. **מפתח Production של HYP:** GitHub Actions קורא `HYP_PRODUCTION_API_KEY`. חובה להכניס **מפתח API פרודקשן אמיתי**, מתוך מסך API בחשבון HYP. אין להעתיק סתם את כתובת PayPal IPN או את הסיומת שלה. הודעת השגיאה מאשרת שהערך שהוכנס קודם **אינו תקף לסביבת Demo**; היא לא מוכיחה אם הוא תקף לפרודקשן. יש להעתיק דווקא את השדה המסומן `API Key` בהגדרות HYP ולשמור אותו תחת `HYP_PRODUCTION_API_KEY` בלבד. אין לשמור מפתחות בקוד ציבורי.
 2. **מפתח פענוח פרטי:** להוריד את קובץ הטקסט שמסר העוזר, לפתוח GitHub > Settings > Secrets and variables > Actions > New repository secret, להדביק את התוכן בדיוק תחת השם `RECEIPT_PRIVATE_KEY_B64`, ולשמור. זה אינו מפתח HYP. המפתח הציבורי התואם כבר בקוד.
 
 לינק ישיר להגדרות Secrets: `https://github.com/Trekyourway/invoicing/settings/secrets/actions`.
