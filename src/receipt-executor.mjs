@@ -21,7 +21,7 @@ export async function executeReceipt(envelope,{privateKey,claim,finish,provider,
     outcome={status:'ISSUANCE_UNKNOWN'};
   }
   const finalState={
-    status:outcome.status==='ISSUED'?'ISSUED':'RECONCILE_WITH_HYP',
+    status:outcome.status==='ISSUED'?(outcome.email_acknowledged===true?'ISSUED':'ISSUED_CHECK_DELIVERY'):'RECONCILE_WITH_HYP',
     email_acknowledged:outcome.status==='ISSUED'&&outcome.email_acknowledged===true,
     updated_utc:new Date().toISOString(),
   };
