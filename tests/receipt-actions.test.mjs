@@ -8,7 +8,7 @@ const raw={customer_name:'Test Client',customer_email:'client@example.com',descr
 const pack=()=>encryptReceipt(raw,publicKey);
 test('asymmetric envelope roundtrip preserves verified payload',()=>{const v=decryptReceipt(pack(),privateKey);assert.equal(v.customer_email,'client@example.com');assert.equal(v.amount_ils,400);assert.equal(v.source_provider,'owner_direct');});
 test('public file contains no customer email/name/description',()=>{const text=JSON.stringify(pack());for(const val of ['client@example.com','Test Client','Paid mentoring'])assert.ok(!text.includes(val));});
-test('tampered ciphertext fails GCM authentication',()=>{const x=pack();x.ciphertext=x.ciphertext.slice(0,-2)+'xx';assert.throws(()=>decryptReceipt(x,privateKey));});
+test('tampered ciphertext fails GCM authentication',()=>{const x=pack();x.ciphertext='A'+x.ciphertext.slice(1);assert.throws(()=>decryptReceipt(x,privateKey));});
 test('cross-id tampering fails authentication',()=>{const x=pack();x.id='f9971bc4-0591-40f2-a459-8abf5ade1000';assert.throws(()=>decryptReceipt(x,privateKey));});
 test('no owner receipt authorization never encrypts',()=>assert.throws(()=>encryptReceipt({...raw,owner_authorizes_issue:false},publicKey)));
 test('no confirmation of funds never encrypts',()=>assert.throws(()=>encryptReceipt({...raw,owner_confirmed_received:false},publicKey)));
