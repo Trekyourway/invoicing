@@ -5,7 +5,7 @@ const EMAIL = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
 const MAX_AMOUNT = 1_000_000;
 const clean = (s,limit) => typeof s === 'string' ? s.trim().slice(0,limit) : '';
 const b64 = b => Buffer.from(b).toString('base64url');
-const deb64 = s => Buffer.from(s,'base64url');
+const deb64 = s => { const data=Buffer.from(s,'base64url'); if(data.toString('base64url')!==s)throw new Error('Non-canonical encrypted field'); return data; };
 
 export function validateReceiptInput(raw) {
   if (!raw || typeof raw !== 'object' || Array.isArray(raw)) throw new Error('Invalid receipt request');
