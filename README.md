@@ -12,7 +12,7 @@
 ## One-time secrets
 Go to [GitHub Actions repository secrets](https://github.com/Trekyourway/invoicing/settings/secrets/actions) and set:
 - `RECEIPT_PRIVATE_KEY_B64`: owner-only private decryption key from the separately supplied file. **Do not commit or share it.**
-- `HYP_PRODUCTION_API_KEY`: production key for the real HYP business. Do NOT use the PayPal IPN URL token or `HYP_DEMO_API_KEY`: HYP confirmed that the URL token is not a valid API key. Obtain a real HYP Production API key from the HYP API settings screen. The old demo workflow was retired.
+- `HYP_PRODUCTION_API_KEY`: production key for the real HYP business. Use the actual HYP Production API key displayed in the HYP API settings, not a copied PayPal IPN URL. An HYP error confirmed that the earlier token was invalid **for Demo**; it did not establish whether it is valid for Production. The retired demo workflow must never receive the production key.
 
 GitHub code and receipt metadata are public. Sensitive source fields are encrypted. No running backend or Google service account is required. GitHub Actions are normally free in public repositories.
 
