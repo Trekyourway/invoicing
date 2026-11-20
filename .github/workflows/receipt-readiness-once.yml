@@ -1,4 +1,4 @@
-name: Validate live receipt secrets (no issuance)
+name: Validate live receipt secrets (no issuance) # repaired-public-key
 on:
   push:
     branches: [main]
