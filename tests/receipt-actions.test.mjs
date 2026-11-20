@@ -26,3 +26,9 @@ test('same paid event with corrected description remains same dedupe fingerprint
  const a=validateReceiptInput(raw), b=validateReceiptInput({...raw,description:'Corrected mentoring description',customer_name:'Corrected Name'});
  assert.equal(a.source_reference,b.source_reference);
 });
+test('issued document without mail acknowledgement is flagged for delivery review, not re-issued',async()=>{
+ const x=pack();let committed;
+ const out=await executeReceipt(x,{privateKey,claim:async()=>({claimed:true,sha:'blob'}),finish:async(k,sha,state)=>{committed=state;},provider:async()=>({status:'ISSUED',document_id:'id',email_acknowledged:false}),preflight:async()=>{}});
+ assert.equal(out.status,'ISSUED_CHECK_DELIVERY');
+ assert.equal(committed.email_acknowledged,false);
+});
