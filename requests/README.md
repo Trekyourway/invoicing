@@ -1,0 +1,1 @@
+Encrypted receipt requests only. NEVER commit plaintext client details.

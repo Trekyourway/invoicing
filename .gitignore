@@ -1,15 +1,10 @@
+# Never commit plaintext receipt details or keys.
 .env
 .env.*
-!.env.example
+*.private.json
+*.plaintext.json
+receipt_private.pem
+*.key
+receipt_private_key_for_github_secret.txt
 node_modules/
-.private/
-*.log
-*.pdf
-*.png
-*.jpg
-*.jpeg
-*.webp
-*.sqlite
-*.sql.gz
-coverage/
 .DS_Store

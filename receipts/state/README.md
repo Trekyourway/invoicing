@@ -1,0 +1,1 @@
+Opaque reservation markers only; no PII or receipt download links.
