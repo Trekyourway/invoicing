@@ -23,7 +23,32 @@ export function createApp({store=DB,issuer=issueReceipt,archiver=retryArchive,sc
    if(!authenticated(req))return send(res,401,{error:'unauthorized'});
    // The API supports no cross-origin browser access. The Bearer token stays in browser session memory.
    if(req.headers.origin){const origin=new URL(req.headers.origin);if(origin.host!==req.headers.host)return send(res,403,{error:'invalid_origin'});}
-   if(req.method==='GET'&&url.pathname==='/api/status')return send(res,200,publicStatus());
+   if(req.method==='GET'&&url.pathname==='/api/status')return send(res,200,publicStatus(process.env));
+   // One-step manual issuance: pressing "Issue" is the owner's confirmation
+   // that the funds have already been received. No bank/Bit API integration.
+   if(req.method==='POST'&&url.pathname==='/api/receipts'){
+    if(!publicStatus(process.env).issuance_enabled)return send(res,409,{error:'issuance_disabled'});
+    const input=await body(req);
+    if(input.payment_confirmed!==true) return send(res,400,{error:'payment_confirmation_required'});
+    if(typeof input.request_id!=='string'||!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(input.request_id))
+      return send(res,400,{error:'valid_request_id_required'});
+    const data={source_provider:'manual',source_reference:input.request_id,
+      customer_name:input.customer_name,customer_email:input.customer_email,
+      description:input.description,amount_ils:input.amount_ils,
+      payment_date:input.payment_date,payment_method:input.payment_method};
+    const saved=await store.createPayment(data);
+    if(saved.status==='SOURCE_CONFLICT_NEEDS_REVIEW'||saved.status==='DUPLICATE_SUSPECT')
+      return send(res,409,{status:saved.status,payment_id:saved.id});
+    if(saved.status==='ISSUED')return send(res,200,{status:'ALREADY_ISSUED',payment_id:saved.id});
+    if(['ISSUANCE_UNKNOWN','ISSUING'].includes(saved.status))
+      return send(res,409,{status:'RECONCILE_WITH_HYP_BEFORE_RETRY',payment_id:saved.id});
+    if(['NEEDS_DETAILS','PENDING_VERIFICATION'].includes(saved.status)){
+      const verified=await store.verifyPayment(saved.id,'User requested a receipt after confirming funds received.');
+      if(verified.status!=='VERIFIED')return send(res,409,{status:verified.status,payment_id:saved.id});
+    }else if(saved.status!=='VERIFIED')return send(res,409,{status:saved.status,payment_id:saved.id});
+    const result=await issuer(saved.id,{store});
+    return send(res,result.status==='ISSUED'||result.status==='ALREADY_ISSUED'?200:202,{...result,payment_id:saved.id});
+   }
    if(req.method==='GET'&&url.pathname==='/api/payments')return send(res,200,{items:await store.listPayments()});
    if(req.method==='GET'&&url.pathname==='/api/report'){const month=url.searchParams.get('month')||new Date().toISOString().slice(0,7);return send(res,200,{month,items:await store.monthlyReport(month)});}
    if(req.method==='POST'&&url.pathname==='/api/payments')return send(res,201,await store.createPayment(await body(req)));
