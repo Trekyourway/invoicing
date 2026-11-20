@@ -1,0 +1,15 @@
+.env
+.env.*
+!.env.example
+node_modules/
+.private/
+*.log
+*.pdf
+*.png
+*.jpg
+*.jpeg
+*.webp
+*.sqlite
+*.sql.gz
+coverage/
+.DS_Store

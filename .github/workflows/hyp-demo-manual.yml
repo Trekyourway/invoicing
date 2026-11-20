@@ -1,0 +1,28 @@
+name: HYP DEMO — manual smoke test only
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  demo:
+    if: github.ref == 'refs/heads/main' && github.repository_owner == 'Trekyourway'
+    runs-on: ubuntu-latest
+    environment: hyp-demo
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --ignore-scripts --no-audit --no-fund
+      - run: npm run smoke:demo
+        env:
+          HYP_ENV: sandbox
+          HYP_ENABLE_LIVE: YES
+          HYP_ALLOW_PRODUCTION: NO
+          HYP_API_KEY: ${{ secrets.HYP_DEMO_API_KEY }}
+          HYP_API_EMAIL: ${{ secrets.HYP_DEMO_API_EMAIL }}
+          HYP_DEVELOPER_EMAIL: ${{ secrets.HYP_DEMO_DEVELOPER_EMAIL }}
+          HYP_PAYMENT_CODES_JSON: ${{ secrets.HYP_DEMO_PAYMENT_CODES_JSON }}
+          DEMO_RECIPIENT_EMAIL: ${{ secrets.DEMO_RECIPIENT_EMAIL }}

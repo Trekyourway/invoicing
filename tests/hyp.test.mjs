@@ -1,0 +1,12 @@
+import {test} from 'node:test';import assert from 'node:assert/strict';
+import {createDocPayload,issueAtProvider} from '../src/hyp.mjs';
+import {normalizedPayment} from '../src/policy.mjs';
+const base={source_provider:'manual',source_reference:'T-001',customer_name:'לקוח לדוגמה',customer_email:'sample@example.com',description:'Lesson',amount_ils:400,payment_method:'bit',payment_date:'2026-11-20'};
+const p={...normalizedPayment(base),status:'VERIFIED',verified_at:'now'};
+const env={HYP_ENV:'sandbox',HYP_ENABLE_LIVE:'YES',HYP_ALLOW_PRODUCTION:'NO',HYP_API_KEY:'FAKE_NOT_A_REAL_KEY',HYP_API_EMAIL:'owner@example.com',HYP_DEVELOPER_EMAIL:'dev@example.com',HYP_PAYMENT_CODES_JSON:'{"bit":9}'};
+test('demo type 400 email requested and exempt business item',()=>{const q=createDocPayload(p,env);assert.equal(q.type,400);assert.equal(q.dont_send_email,0);assert.equal(q.item[0].vat_type,'NON');assert.equal(q.payment[0].payment_sum,400);assert.equal(q.customer_email,base.customer_email);});
+test('missing payment code prevents provider call',()=>assert.throws(()=>createDocPayload(p,{...env,HYP_PAYMENT_CODES_JSON:'{}'})));
+test('production is disabled even with demo key',()=>assert.throws(()=>createDocPayload(p,{...env,HYP_ENV:'production'})));
+test('provider sandbox HTTP and explicit sent mail',async()=>{let calls=0;const out=await issueAtProvider(p,{environment:env,fetchFn:async(url,options)=>{calls++;assert.equal(url,'https://demo.ezcount.co.il/api/createDoc');assert.equal(options.method,'POST');return {status:200,json:async()=>({success:true,doc_uuid:'TEST-DOC',pdf_link:'https://example.test/fake.pdf',sent_mails:['sample@example.com']})};}});assert.equal(calls,1);assert.equal(out.status,'ISSUED');assert.equal(out.email_acknowledged,true);});
+test('provider 500 does not confirm receipt',async()=>{const out=await issueAtProvider(p,{environment:env,fetchFn:async()=>({status:500,json:async()=>({success:false})})});assert.equal(out.status,'ISSUANCE_UNKNOWN');});
+test('missing email is rejected before provider call',()=>assert.throws(()=>createDocPayload({...p,customer_email:''},env)));
