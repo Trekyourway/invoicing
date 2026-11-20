@@ -35,10 +35,11 @@ npm start
 
 ## Known release blockers
 
-- Dedicated public GitHub repository is `Trekyourway/invoicing`. It must be populated and CI green before Hostinger deploy.
-- HYP DEMO live contract and payment codes are not confirmed by a real provider response.
+- GitHub public repo and CI are green (49/49 tests).
+- HYP DEMO live `createDoc` PASSED on 2026-11-20: receipt #30964, email delivered to the authorized test inbox, provider-issued original signed PDF verified and privately archived in Google Drive. See [`docs/E2E_DEMO_LIVE_2026-11-20.md`](docs/E2E_DEMO_LIVE_2026-11-20.md). **This was a manually orchestrated demo archive, not an automated production backup.**
+- The temporary demo credential was placed in a public test workflow on explicit request; the workflow was removed from live branches and its run logs deleted, but historical Git objects may remain. **Rotate HYP DEMO key** before reuse. Production keys must never be public.
 - HYP production API-capable subscription and payment issue remain unresolved; screenshot showed test-only key and billing error.
-- No credentials for Hostinger MySQL or independent Google OAuth have been provisioned here.
-- No live email receipt, Drive PDF backup, Hostinger deployment or database migration has been verified yet.
+- Hostinger deployment + live MySQL + independent Google OAuth/automated backup have NOT been configured or verified.
+- Live AI/voice/image agent intake and verified payment webhooks remain roadmap tasks.
 
 Do not call this service production-ready until all release gates in the specification pass.
