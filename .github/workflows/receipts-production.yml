@@ -27,7 +27,7 @@ jobs:
           HYP_ENV: production
           HYP_ENABLE_LIVE: 'YES'
           HYP_ALLOW_PRODUCTION: 'YES'
-          HYP_API_KEY: ${{ secrets.HYP_PRODUCTION_API_KEY || secrets.HYP_DEMO_API_KEY }}
+          HYP_API_KEY: ${{ secrets.HYP_PRODUCTION_API_KEY }}
           HYP_API_EMAIL: ${{ vars.HYP_API_EMAIL || 'yourwaytrek@gmail.com' }}
           HYP_DEVELOPER_EMAIL: ${{ vars.HYP_DEVELOPER_EMAIL || 'yourwaytrek@gmail.com' }}
           HYP_PAYMENT_CODES_JSON: '{"other":9,"bit":9,"paybox":9,"bank_transfer":9}'
