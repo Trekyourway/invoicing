@@ -1,0 +1,1 @@
+One-time, owner-approved reconciliation of a reserved HYP proforma invoice using the original transaction_id. Do not re-run without reviewing the provider result.
