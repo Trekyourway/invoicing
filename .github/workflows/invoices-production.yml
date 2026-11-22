@@ -1,0 +1,34 @@
+name: Issue approved transaction invoices via HYP
+on:
+  push:
+    branches: [main]
+    paths: ['invoice-requests/*.enc.json']
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: yourway-transaction-invoices
+  cancel-in-progress: false
+jobs:
+  issue:
+    if: github.repository == 'Trekyourway/invoicing' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Issue only owner-approved encrypted transaction invoices
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          HYP_ENV: production
+          HYP_ENABLE_LIVE: 'YES'
+          HYP_ALLOW_PRODUCTION: 'YES'
+          HYP_API_KEY: ${{ secrets.HYP_PRODUCTION_API_KEY }}
+          HYP_API_EMAIL: ${{ vars.HYP_API_EMAIL || 'yourwaytrek@gmail.com' }}
+          HYP_DEVELOPER_EMAIL: ${{ vars.HYP_DEVELOPER_EMAIL || 'yourwaytrek@gmail.com' }}
+          RECEIPT_PRIVATE_KEY_B64: ${{ secrets.RECEIPT_PRIVATE_KEY_B64 }}
+        run: node src/invoice-issue-once.mjs
