@@ -32,3 +32,23 @@ test('issued document without mail acknowledgement is flagged for delivery revie
  assert.equal(out.status,'ISSUED_CHECK_DELIVERY');
  assert.equal(committed.email_acknowledged,false);
 });
+
+
+test('ledger failure after confirmed HYP issuance never reissues a receipt',async()=>{
+  let claimed=false,issued=0,finished=false,notified=0;
+  const x=pack();
+  const options={
+    privateKey,
+    claim:async()=>{if(claimed)return {claimed:false};claimed=true;return {claimed:true,sha:'state-sha'};},
+    finish:async()=>{finished=true;},
+    provider:async()=>{issued++;return {status:'ISSUED',document_id:'private',pdf_url:'https://files.ezcount.co.il/private',email_acknowledged:true};},
+    preflight:async()=>{},
+    onIssued:async({payment,provider})=>{notified++;assert.ok(finished);assert.equal(payment.amount_ils,400);assert.equal(provider.document_id,'private');throw Error('google not configured');},
+  };
+  const first=await executeReceipt(x,options);
+  const second=await executeReceipt(x,options);
+  assert.equal(first.status,'ISSUED');
+  assert.equal(first.ledger_status,'NEEDS_RECONCILIATION');
+  assert.equal(second.status,'ALREADY_RESERVED');
+  assert.equal(issued,1);assert.equal(notified,1);
+});
