@@ -12,7 +12,7 @@ const privateKey=Buffer.from(env.RECEIPT_PRIVATE_KEY_B64,'base64').toString('utf
 if(!privateKey.includes('BEGIN PRIVATE KEY'))throw new Error('Invalid private decryption key');
 const {claim,finish}=createGitHubState({repo:env.GITHUB_REPOSITORY,token:env.GITHUB_TOKEN,kind:'invoices'});
 const dir=new URL('../invoice-requests/',import.meta.url);
-let files=[];try{files=(await readdir(dir)).filter(x=>/^[0-9a-f-]{36}\\.enc\\.json$/.test(x)).sort();}catch(e){if(e.code!=='ENOENT')throw e;}
+let files=[];try{files=(await readdir(dir)).filter(x=>/^[0-9a-f-]{36}\.enc\.json$/.test(x)).sort();}catch(e){if(e.code!=='ENOENT')throw e;}
 if(files.length>5)throw new Error('Too many invoice requests');
 let issued=0,skipped=0,review=0;
 for(const file of files){
