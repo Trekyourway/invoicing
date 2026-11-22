@@ -32,6 +32,9 @@ let out;try{out=await response.json();}catch{out={};}
 const result=sanityProviderResult(out,response.status);
 const detail=JSON.stringify({http_status:response.status,success:out?.success===true,document_ref_present:Boolean(out?.doc_uuid||out?.uuid||out?.doc_id||out?.id||out?.document_id||out?.pdf_link),error_code:(typeof out?.error_code==='number'||/^\\d{1,6}$/.test(String(out?.error_code||'')))?String(out.error_code):null,response_fields:Object.keys(out).filter(k=>/^[a-z_]{2,40}$/.test(k)).slice(0,18)});
 console.log('HYP_SAFE_DIAGNOSTICS '+detail);
+const hintText=String(out?.errMsg||'').toLowerCase();
+const known=['api','key','invalid','type','item','vat','email','company','account','plan','permission','forbidden','not','allowed','document','invoice','receipt','customer','required','missing','transaction','duplicate','date','currency','request','format','failed','error','data','address','number','exempt','support','upgrade'];
+console.log('HYP_ERROR_HINTS '+JSON.stringify(known.filter(x=>hintText.includes(x))));
 if(result.status!=='ISSUED')throw new Error('HYP returned no confirmed document; no additional retries');
 const ack=Array.isArray(result.email_acknowledged)&&result.email_acknowledged.some(x=>typeof x==='string'&&x.trim().toLowerCase()===p.customer_email);
 const {finish}=createGitHubState({repo:env.GITHUB_REPOSITORY,token:env.GITHUB_TOKEN,kind:'invoices'});
