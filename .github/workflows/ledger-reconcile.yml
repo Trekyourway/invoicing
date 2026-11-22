@@ -1,5 +1,8 @@
 name: Reconcile HYP-issued receipts to private 2026 ledger (no new documents)
 on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/ledger-reconcile.yml']
   workflow_dispatch:
   schedule:
     - cron: '17 * * * *'
