@@ -39,3 +39,6 @@ The ChatGPT Google Drive connection cannot automatically be reused inside GitHub
 - The ledger reflects confirmed receipts; it is not the legal accounting authority and its annual total must not be described as today's income.
 - Older receipts cannot guarantee recovery of a number/PDF if HYP did not return/stash it before this change.
 - No new real HYP invoices or receipts should be created to test ledger sync. Test via existing issued records and mock unit tests.
+
+## Payment milestones and installments
+See [the Hebrew milestone billing protocol](docs/MILESTONE_BILLING_PROTOCOL_HE.md): approved project payment schedule, one HYP transaction invoice for each due milestone (or one upfront full-project invoice, never both), and a receipt for each received transfer. This is a documented business process; automated milestone tracking and payment matching are not yet implemented.
