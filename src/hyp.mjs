@@ -19,6 +19,9 @@ export async function issueAtProvider(payment,{environment=process.env,fetchFn=f
  const response=await fetchFn(`${base}/api/createDoc`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body),signal:AbortSignal.timeout(15000)});
  const out=await response.json();
  const parsed=sanityProviderResult(out,response.status);
- if(parsed.status==='ISSUED')parsed.email_acknowledged=parsed.email_acknowledged.some(x=>typeof x==='string'&&x.trim().toLowerCase()===payment.customer_email.trim().toLowerCase());
+ if(parsed.status==='ISSUED'){
+   parsed.email_acknowledged=parsed.email_acknowledged.some(x=>typeof x==='string'&&x.trim().toLowerCase()===payment.customer_email.trim().toLowerCase());
+   if(out.doc_number!=null && /^[\w-]{1,60}$/.test(String(out.doc_number)))parsed.document_number=String(out.doc_number);
+ }
  return parsed;
 }
