@@ -29,9 +29,6 @@ function normalizeInputs(p,key){
 }
 const noteContains=(row,token)=>norm(row?.[9]).includes(token);
 const rowMatches=(row,v)=>norm(row[0])===v.date&&norm(row[4])===v.name&&norm(row[6])===v.method&&amount(row[7])===v.amount;
-function updateNote(sheetId,index,oldNote,newNote){
-  return {updateCells:{range:{sheetId,startRowIndex:index,endRowIndex:index+1,startColumnIndex:5,endColumnIndex:10},rows:[{values:[cell(1),{}, {}, {},cell(oldNote?oldNote+' | '+newNote:newNote)]}],fields:'userEnteredValue'}};
-}
 // Only update F and J: never change the recorded amount, payer, bank method, or formula-backed summary.
 function updateExisting(sheetId,index,oldNote,newNote){
   return [
