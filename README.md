@@ -29,3 +29,13 @@ node src/receipt-queue-encrypt.mjs --stdin < private-request.json
 ```
 
 **Never commit the plaintext `private-request.json` file.** The CLI supports stdin so other assistants or local agents can pipe data without writing a file.
+## Private ledger sync (optional, gated)
+
+New operational bridge (see `docs/LEDGER_SYNC_RUNBOOK_HE.md`): after HYP confirms issuance, the workflow can update the existing 2026 private Google Sheet **only when Google authorization is configured**. A separate scheduled workflow reconciles already-issued receipts every hour without calling HYP to issue anything. It uses opaque per-payment markers to avoid duplicate ledger rows, preserves the formulas and totals, and keeps the HYP document number/PDF URL in the private Sheet. For failure recovery, provider identifiers are persisted **encrypted** in public GitHub receipt state, never as readable text.
+
+The ChatGPT Google Drive connection cannot automatically be reused inside GitHub Actions. Owner must set either `GOOGLE_SHEETS_SERVICE_ACCOUNT_JSON_B64` (and share only this ledger with its service account) or `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_REFRESH_TOKEN` with Google Sheets edit scope in GitHub Actions Secrets. Without credentials, automatic Sheets writes **are not active**; the HYP issuance pipeline remains independent.
+
+- Existing Sheet: `רישום קבלות שיר 26`, tab `הכנסות והוצאות BIT/PAYBOX 2026`.
+- The ledger reflects confirmed receipts; it is not the legal accounting authority and its annual total must not be described as today's income.
+- Older receipts cannot guarantee recovery of a number/PDF if HYP did not return/stash it before this change.
+- No new real HYP invoices or receipts should be created to test ledger sync. Test via existing issued records and mock unit tests.
