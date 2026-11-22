@@ -1,0 +1,1 @@
+One-time HYP rejection diagnosis. Provider idempotency transaction ID unchanged. No new invoice reference or payment request.
