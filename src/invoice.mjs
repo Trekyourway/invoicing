@@ -10,15 +10,16 @@ export function createTransactionInvoicePayload(input, {environment=process.env,
   if(!environment.HYP_API_KEY || !environment.HYP_API_EMAIL || !environment.HYP_DEVELOPER_EMAIL)throw new Error('HYP credentials missing');
   if(!p.owner_confirmed_received || !p.owner_authorizes_issue)throw new Error('Owner approval required');
   if(typeof transactionId!=='string' || !/^[a-f0-9]{64}$/.test(transactionId))throw new Error('Stable opaque transaction id required');
+  const hypTransactionId='inv-'+transactionId.slice(0,40); // 44 characters; HYP max is 45
   return {
     api_key:environment.HYP_API_KEY, api_email:environment.HYP_API_EMAIL,
     developer_email:environment.HYP_DEVELOPER_EMAIL,
-    type:300, transaction_id:transactionId,
+    type:300, transaction_id:hypTransactionId,
     customer_name:p.customer_name, customer_email:p.customer_email,
     dont_send_email:0, currency:'ILS',
     item:[{details:p.description,amount:1,price:p.amount_ils,vat_type:'NON'}],
-    comment:'שולם במלואו. קבלות עבור התשלומים כבר הופקו בנפרד. אין להעביר תשלום נוסף.',
-    email_text:'מצורפת חשבונית עסקה לצורכי תיעוד. הסכום כבר שולם במלואו והקבלות נשלחו בנפרד. אין צורך בתשלום נוסף.',
+    comment:'שולם במלואו',
+    email_text:'מצורפת חשבונית עסקה עבור שירותים ששולמו במלואם.',
   };
 }
 export async function issueTransactionInvoice(input,{environment=process.env, transactionId,fetchFn=fetch}={}) {
