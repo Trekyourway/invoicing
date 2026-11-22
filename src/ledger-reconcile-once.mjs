@@ -1,6 +1,7 @@
 import {readFile,readdir} from 'node:fs/promises';
 import {decryptReceipt,opaquePaymentKey} from './receipt-crypto.mjs';
 import {accessToken,syncToLedger} from './ledger-sync.mjs';
+import {decryptPrivateResult} from './private-result.mjs';
 
 const env=process.env;
 if(env.GITHUB_REPOSITORY!=='Trekyourway/invoicing'||env.GITHUB_REF!=='refs/heads/main')throw Error('untrusted_repository_ref');
@@ -29,7 +30,8 @@ for(const file of files){
     const obj=await response.json();
     const state=JSON.parse(Buffer.from(obj.content,'base64').toString('utf8'));
     if(!['ISSUED','ISSUED_CHECK_DELIVERY'].includes(state.status)){pending++;continue;}
-    const result=await syncToLedger({payment,key,provider:{emailAcknowledged:state.email_acknowledged===true},token});
+    const privateDoc=decryptPrivateResult(state.private_result,privateKey);
+    const result=await syncToLedger({payment,key,provider:{...privateDoc,emailAcknowledged:state.email_acknowledged===true},token});
     if(result.kind==='inserted'||result.kind==='enriched'||result.kind==='reconciled_existing')updated++;else unchanged++;
   }catch{
     review++; // No customer information, exception detail, or credentials in public CI logs.
