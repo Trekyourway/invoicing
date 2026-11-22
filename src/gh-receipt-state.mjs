@@ -1,9 +1,10 @@
 // Persistent public NON-PII receipt markers. No provider ID, email, names,
 // amount or PDF URL may ever be included here.
-export function createGitHubState({repo,token,branch='main',fetchFn=fetch}={}) {
+export function createGitHubState({repo,token,branch='main',fetchFn=fetch,kind='receipts'}={}) {
   if(!repo||!token)throw new Error('GitHub state configuration missing');
   if(!/^[-\w]+\/[-\w.]+$/.test(repo))throw new Error('Invalid repository');
-  const base=`https://api.github.com/repos/${repo}/contents/receipts/state/`;
+  if(!['receipts','invoices'].includes(kind))throw new Error('Invalid state kind');
+  const base=`https://api.github.com/repos/${repo}/contents/${kind}/state/`;
   const headers={Authorization:`Bearer ${token}`,Accept:'application/vnd.github+json','X-GitHub-Api-Version':'2022-11-28','Content-Type':'application/json'};
   const send=(url,method='GET',body)=>fetchFn(url,{method,headers,...(body?{body:JSON.stringify(body)}:{})});
   const path=key=>{if(!/^[a-f0-9]{64}$/.test(key))throw new Error('Invalid receipt state key');return base+key+'.json';};
