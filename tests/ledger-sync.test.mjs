@@ -8,7 +8,7 @@ const payment={source_provider:'owner_direct',source_reference:'bank-838979',cus
   customer_email:'nancy@example.test',description:'ייעוץ AI – מפגש עם זוהר כהן',payment_date:'2026-11-22',
   amount_ils:400,payment_method:'bank_transfer',owner_confirmed_received:true,owner_authorizes_issue:true};
 const original=()=>[
-  headers,
+  [...headers],
   ['20/11/2026','עסקי','ליווי / הדרכת AI','הדרכת AI','עדי בן דור',1,'Bit',400,'הכנסה','קבלה הופקה'],
   ['22/11/2026','עסקי','ליווי / הדרכת AI','ייעוץ AI',company,1,'העברה בנקאית',400,'הכנסה','אסמכתא 838979; קבלה הופקה ב-HYP Production'],
   [null,null,null,null,null,null,'סה״כ',800],
