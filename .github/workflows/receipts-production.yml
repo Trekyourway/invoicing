@@ -32,4 +32,8 @@ jobs:
           HYP_DEVELOPER_EMAIL: ${{ vars.HYP_DEVELOPER_EMAIL || 'yourwaytrek@gmail.com' }}
           HYP_PAYMENT_CODES_JSON: '{"other":9,"bit":9,"paybox":9,"bank_transfer":9}'
           RECEIPT_PRIVATE_KEY_B64: ${{ secrets.RECEIPT_PRIVATE_KEY_B64 }}
+          GOOGLE_SHEETS_SERVICE_ACCOUNT_JSON_B64: ${{ secrets.GOOGLE_SHEETS_SERVICE_ACCOUNT_JSON_B64 }}
+          GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+          GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+          GOOGLE_REFRESH_TOKEN: ${{ secrets.GOOGLE_REFRESH_TOKEN }}
         run: node src/receipt-issue-once.mjs
