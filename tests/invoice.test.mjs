@@ -7,7 +7,9 @@ const transactionId='a'.repeat(64);
 test('invoice is ONLY proforma, no VAT, no collection and no new receipt',()=>{
   const body=createTransactionInvoicePayload(p,{environment,transactionId});
   assert.equal(body.type,300);
-  assert.equal(body.transaction_id,transactionId);
+  assert.equal(body.transaction_id,'inv-'+transactionId.slice(0,40));
+  assert.equal(body.transaction_id.length,44);
+  assert.ok(body.transaction_id.length<=45);
   assert.equal(body.item[0].vat_type,'NON');
   assert.equal(body.item[0].price,1200);
   assert.equal(body.dont_send_email,0);
