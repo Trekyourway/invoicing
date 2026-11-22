@@ -2,6 +2,7 @@ import {readFile,readdir} from 'node:fs/promises';
 import {executeReceipt} from './receipt-executor.mjs';
 import {createGitHubState} from './gh-receipt-state.mjs';
 import {createDocPayload,issueAtProvider} from './hyp.mjs';
+import {accessToken,syncToLedger} from './ledger-sync.mjs';
 
 const env=process.env;
 if(env.HYP_ENV!=='production'||env.HYP_ENABLE_LIVE!=='YES'||env.HYP_ALLOW_PRODUCTION!=='YES')throw new Error('Production explicitly disabled');
@@ -14,7 +15,7 @@ const {claim,finish}=createGitHubState({repo:env.GITHUB_REPOSITORY,token:env.GIT
 const reqDir=new URL('../requests/',import.meta.url);
 let files=[];try{files=(await readdir(reqDir)).filter(x=>/^[0-9a-f-]{36}\.enc\.json$/.test(x)).sort();}catch(e){if(e.code!=='ENOENT')throw e;}
 if(files.length>25)throw new Error('Too many pending requests; split batch');
-let issued=0,review=0,skipped=0;
+let issued=0,review=0,skipped=0,ledgerPending=0,ledgerUnconfigured=0,ledgerUpdated=0;
 for(const file of files) {
   const raw=await readFile(new URL(`../requests/${file}`,import.meta.url),'utf8');
   let req;try{req=JSON.parse(raw);}catch{throw new Error('Invalid encrypted request file');}
@@ -24,10 +25,24 @@ for(const file of files) {
   const outcome=await executeReceipt(req,{privateKey,claim,finish,
     preflight:async p=>createDocPayload(p,env),
     provider:async p=>issueAtProvider(p,{environment:env}),
+    onIssued:async({payment,key,provider})=>{
+      if(!payment.payment_date.startsWith('2026-'))return {kind:'other_year_not_synced'};
+      const token=await accessToken(env);
+      if(!token)return {kind:'not_configured'};
+      return syncToLedger({payment,key,provider:{
+        documentNumber:provider.document_number,
+        pdfUrl:provider.pdf_url,
+        emailAcknowledged:provider.email_acknowledged
+      },token});
+    },
   });
-  if(outcome.status==='ISSUED')issued++;
-  else if(outcome.status==='ALREADY_RESERVED')skipped++;
+  if(outcome.status==='ISSUED'){
+    issued++;
+    if(['inserted','reconciled_existing','enriched','already_synced'].includes(outcome.ledger_status))ledgerUpdated++;
+    else if(outcome.ledger_status==='not_configured')ledgerUnconfigured++;
+    else ledgerPending++;
+  }else if(outcome.status==='ALREADY_RESERVED')skipped++;
   else review++;
 }
-console.log(JSON.stringify({status:'completed',issued,needs_review:review,already_reserved:skipped}));
-if(review)process.exitCode=1;
+console.log(JSON.stringify({status:'completed',issued,needs_review:review,already_reserved:skipped,ledger_synced:ledgerUpdated,ledger_not_configured:ledgerUnconfigured,ledger_pending:ledgerPending}));
+if(review||ledgerPending)process.exitCode=1;
