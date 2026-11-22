@@ -1,0 +1,1 @@
+Reconcile the existing reserved HYP transaction invoice after fixing the transaction_id length to 44 characters. No new receipt; use the same encrypted request and existing reservation.
