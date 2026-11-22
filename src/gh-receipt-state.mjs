@@ -25,6 +25,14 @@ export function createGitHubState({repo,token,branch='main',fetchFn=fetch,kind='
   async function finish(key,sha,status){
     if(!sha)throw new Error('Missing reservation SHA');
     const record={status:status.status,email_acknowledged:status.email_acknowledged,updated_utc:status.updated_utc};
+    const e=status.private_result;
+    // Encrypted-only provider metadata. Never place a plaintext PDF URL, client details or HYP ID here.
+    if(e){
+      if(e.version!==1||e.alg!=='RSA-OAEP-256+A256GCM'||!/^[-a-f0-9]{36}$/.test(e.id||'')||
+        ['key','iv','tag','ciphertext'].some(k=>typeof e[k]!=='string'||e[k].length>10000||!/^[A-Za-z0-9_-]+$/.test(e[k])))
+        throw Error('Invalid private result envelope');
+      record.private_result={version:e.version,id:e.id,alg:e.alg,key:e.key,iv:e.iv,tag:e.tag,ciphertext:e.ciphertext};
+    }
     const res=await send(path(key),'PUT',{message:'Record HYP receipt result',content:encode(record),sha,branch});
     if(res.status!==200)throw new Error('Receipt outcome could not be saved; reconcile in HYP');
   }

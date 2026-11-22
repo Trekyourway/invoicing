@@ -1,4 +1,5 @@
 import {decryptReceipt,opaquePaymentKey} from './receipt-crypto.mjs';
+import {encryptPrivateResult} from './private-result.mjs';
 
 export function verifiedProviderPayment(p){
   return {...p,status:'VERIFIED',verified_at:new Date().toISOString()};
@@ -6,7 +7,7 @@ export function verifiedProviderPayment(p){
 
 // Claim must persist a one-way fingerprint BEFORE calling HYP. A lost network reply
 // must never trigger an automatic second receipt.
-export async function executeReceipt(envelope,{privateKey,claim,finish,provider,preflight}) {
+export async function executeReceipt(envelope,{privateKey,claim,finish,provider,preflight,onIssued}) {
   const p=decryptReceipt(envelope,privateKey);
   const verified=verifiedProviderPayment(p);
   await preflight(verified); // check production configuration prior to reservation
@@ -25,7 +26,23 @@ export async function executeReceipt(envelope,{privateKey,claim,finish,provider,
     email_acknowledged:outcome.status==='ISSUED'&&outcome.email_acknowledged===true,
     updated_utc:new Date().toISOString(),
   };
-  // No name, email, amount, document URL or HYP document ID in the PUBLIC repo.
+  if(outcome.status==='ISSUED'){
+    try{finalState.private_result=encryptPrivateResult(outcome,privateKey);}catch{
+      // The official receipt still exists; do not retry HYP because metadata encryption failed.
+    }
+  }
+  // No plaintext name, email, amount, document URL or HYP document ID in the PUBLIC repo.
   await finish(key,reservation.sha,finalState);
-  return {status:finalState.status,email_acknowledged:finalState.email_acknowledged};
+  // Sheet synchronization happens strictly AFTER the HYP issuance result is recorded.
+  // Failure here can never cause a second receipt or change an issued status.
+  let ledger_status='NOT_CONFIGURED';
+  if(outcome.status==='ISSUED' && onIssued){
+    try {
+      const synced=await onIssued({payment:p,key,provider:outcome});
+      ledger_status=synced?.kind||'NEEDS_REVIEW';
+    } catch {
+      ledger_status='NEEDS_RECONCILIATION';
+    }
+  }
+  return {status:finalState.status,email_acknowledged:finalState.email_acknowledged,ledger_status};
 }

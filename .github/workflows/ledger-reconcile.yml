@@ -1,0 +1,36 @@
+name: Reconcile HYP-issued receipts to private 2026 ledger (no new documents)
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/ledger-reconcile.yml']
+  workflow_dispatch:
+  schedule:
+    - cron: '17 * * * *'
+permissions:
+  contents: read
+concurrency:
+  group: yourway-real-receipts
+  cancel-in-progress: false
+jobs:
+  sync:
+    if: github.repository == 'Trekyourway/invoicing' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Reconcile issued receipts without invoking HYP
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          GITHUB_REF: ${{ github.ref }}
+          RECEIPT_PRIVATE_KEY_B64: ${{ secrets.RECEIPT_PRIVATE_KEY_B64 }}
+          GOOGLE_SHEETS_SERVICE_ACCOUNT_JSON_B64: ${{ secrets.GOOGLE_SHEETS_SERVICE_ACCOUNT_JSON_B64 }}
+          GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+          GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+          GOOGLE_REFRESH_TOKEN: ${{ secrets.GOOGLE_REFRESH_TOKEN }}
+        run: node src/ledger-reconcile-once.mjs
