@@ -1,4 +1,5 @@
 import {decryptReceipt,opaquePaymentKey} from './receipt-crypto.mjs';
+import {encryptPrivateResult} from './private-result.mjs';
 
 export function verifiedProviderPayment(p){
   return {...p,status:'VERIFIED',verified_at:new Date().toISOString()};
@@ -25,7 +26,12 @@ export async function executeReceipt(envelope,{privateKey,claim,finish,provider,
     email_acknowledged:outcome.status==='ISSUED'&&outcome.email_acknowledged===true,
     updated_utc:new Date().toISOString(),
   };
-  // No name, email, amount, document URL or HYP document ID in the PUBLIC repo.
+  if(outcome.status==='ISSUED'){
+    try{finalState.private_result=encryptPrivateResult(outcome,privateKey);}catch{
+      // The official receipt still exists; do not retry HYP because metadata encryption failed.
+    }
+  }
+  // No plaintext name, email, amount, document URL or HYP document ID in the PUBLIC repo.
   await finish(key,reservation.sha,finalState);
   // Sheet synchronization happens strictly AFTER the HYP issuance result is recorded.
   // Failure here can never cause a second receipt or change an issued status.
