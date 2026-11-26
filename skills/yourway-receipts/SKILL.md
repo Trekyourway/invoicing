@@ -1,65 +1,58 @@
 ---
 name: yourway-receipts
-description: Manage real YOURWAY payments and receipts end-to-end, including screenshot/voice intake, client matching, HYP production issuance, confirmation of customer email, private ledger update, idempotency and prepayment demands.
+description: YOURWAY payment collection: standalone Hebrew payment requests before payment; official HYP receipts after confirmed funds; client matching, duplicate prevention, email and private income ledger.
 ---
 
-# YOURWAY | ניהול תקבולים ומסמכים — סקיל עבודה
+# YOURWAY | דרישות תשלום וקבלות — סקיל עבודה
 
-Scope: receipts, trek planning, personal coaching, AI coaching, consulting, project milestones and payment requests. Campaign/lead acquisition automation is a **different skill** and must not be expanded here.
+## מדיניות מחייבת: עוסק פטור
+מותרות בתהליך הפעיל שתי פעולות:
+1. **דרישת תשלום**: מסמך עצמאי של YOURWAY לפני גבייה, שאפשר לערוך ולהפיק כ-PDF. הוא **אינו חשבונית ואינו קבלה**, ולא מופק באמצעות HYP.
+2. **קבלה**: מסמך רשמי באמצעות HYP/EasyCount, מסוג 400 בלבד, **אחרי** שהתקבל הכסף ואושר על ידי בעלת העסק.
 
-## Core sources and roles
-1. **HYP/EasyCount**: the official source of tax/accounting documents, document numbers, issued receipt PDF and export to the accountant.
-2. **Private Google Sheet**: search connected Drive for the exact existing title `רישום קבלות שיר 26`, tab `הכנסות והוצאות BIT/PAYBOX 2026`. This is the owner's operational income ledger across treks, coaching, mentoring and AI. Never create a duplicate finance sheet. Prior-year counterpart: `רישום הוצאות קבלות שיר 2025`.
-3. **Clients/projects**: match to the appropriate private Drive file, previous trek client sheet, calendar event or lead sheet. Matching a person to the campaigns is not mandatory and must never happen for an unrelated referral/client.
-4. **GitHub public repo** `Trekyourway/invoicing`: code + **encrypted receipt requests and non-PII state only**. Do NOT commit customer names, amounts, emails, originals, PDF links, sensitive identifiers or any credentials in plaintext.
+**אין להפיק חשבוניות מכל סוג במסגרת הסקיל, כולל חשבונית עסקה (HYP type 300), חשבונית מס או חשבונית מס-קבלה.** שלוש זרימות HYP הישנות לחשבוניות הוסרו מעץ הקוד הפעיל. אין להפעיל אותן דרך API, GitHub Actions או מנגנון שיחזור. מסמכים שהופקו בעבר ורישומי המעקב שלהם נשמרים לטיפול חשבונאי/ביקורת, ולא נמחקים.
 
-## User intake (text, voice or Bit/PayBox/bank screenshot)
-- Extract separately: payer name, amount, transfer date, payment platform, provider reference, service or project and stated status.
-- If the screenshot says "ממתין", do NOT infer successful receipt. Ask the owner if it was actually received. A clear owner confirmation ("קיבלתי, תוציא") authorizes issuance of the identified confirmed payments.
-- Never infer that a transfer, refund, internal balance movement, family transfer, interest or reimbursement is business revenue; if uncertain, classify as pending review.
-- Look up the payer across available connected documents and client database to find legal/customer name, **confirmed** recipient email and service description. Never invent an email address.
-- Ask for only the remaining material details. When the user supplies multiple receipts, process each independently, one document per actual received transfer; use distinct provider references.
+## דרישת תשלום — התבנית שנבנתה ב-26.11.2026
+מקור העבודה: [תבנית YOURWAY עצמאית](../../templates/yourway-payment-request.html), שמבוססת על הקובץ האמיתי שנוצר באותו יום בצוות אחר.
+- מראה YOURWAY AI; שם העסק שיר אורן / עוסק פטור; אתרים shiroren.ai ו-shiroren.ai/school; עברית RTL ו-A4.
+- שם חברה לחיוב וח.פ./ת.ז.; מקבל השירות; איש קשר; מייל למעקב.
+- קטלוג שירותים, שורות חופשיות, כמות, מחיר יחידה וסכום מצטבר אוטומטי, כולל אפשרות לתמחור לפי אפיון.
+- אפשרויות Bit, PayBox והעברה בנקאית **ללא קישור תשלום**. ניתן להדפיס / לשמור כ-PDF מדפדפן.
+- אין פעולה של שליחת מייל, אין יצירת מסמך HYP, ואין עדכון אוטומטי של מאגר הכנסות מתוך התבנית.
+- הגרסה הציבורית בגיטהאב ריקה מפרטי לקוחות, ח.פ. ספציפיים, דוא״ל לקוח וחשבון בנק אישי. יש למלא אותם באופן פרטי. הדפדפן עשוי לשמור מקומית פרטי תשלום שהוזנו; זו לא מערכת אחסון בענן.
 
-## Duplicate gate, always before issuance
-- Compare provider reference + payment method to current receipts/state and relevant ledger.
-- If source state is RESERVED, RECONCILE_WITH_HYP, ISSUED or ISSUED_CHECK_DELIVERY, do not blindly rerun or issue a second receipt. Check HYP documents first.
-- If missing a unique reference, use conservative fingerprint; ask owner if truly two separate transfers.
-- Keep unique reference stable in the encrypted payload and the private ledger.
+### לפני שליחת דרישה
+1. אימות שם החברה המשפטי, ח.פ., איש קשר ומייל, תיאור השירות, הכמות, המחיר וסך התשלום, לפי הצעה או הסכם שאושרו. אין להסיק הסכם ממסמך טיוטה או אירוע יומן.
+2. בדיקת דרישות ותשלומים קיימים, כדי לא לדרוש פעמיים את אותו סכום או שלב. בפרויקט מדורג יש לזהות את אבן הדרך הספציפית, ורק אם הגיע מועד החיוב.
+3. יצירה מהתבנית, בדיקה חזותית של PDF לפני שליחה. המסמך נקרא **דרישת תשלום**, ומציין ש**קבלה רשמית תופק לאחר קבלת התשלום**.
+4. שליחה רק לאחר הוראה מפורשת של בעלת העסק, דרך Gmail או כלי מורשה אחר, לכתובת שאומתה. הכנת PDF אינה הוכחה לשליחה.
+5. סטטוסים רצויים: טיוטה, אושר, נשלח, שולם חלקית, שולם, בוטל. **התבנית הנוכחית לא מנהלת נתוני לקוחות או סטטוסים משותפים באופן אוטומטי.** אין לדווח על סנכרון שלא בוצע.
+6. אין לרשום דרישה שטרם שולמה בגיליון ההכנסות. היא אינה תקבול ואינה קבלה.
 
-## After payment was received
-1. Confirm business eligibility: HYP account business details, document type `קבלה` (type 400 for exempt business) and a real HYP Production API key. Never use a Demo key against Production or vice versa.
-2. Build **encrypted-only** request, using the public key at `keys/receipt_queue_public.pem` with `src/receipt-crypto.mjs` and the existing encryption helper. Encrypt locally/in a trusted runtime *before* uploading anything to public GitHub. Never put PII in workflow inputs, GitHub logs, plaintext issues, branch names or GitHub PR descriptions.
-3. Commit one `requests/<uuid>.enc.json` per payment through the repo's existing action flow. The queue auto-executes through `.github/workflows/receipts-production.yml`. Do not rerun manually after ambiguous provider errors.
-4. Read GitHub run, inspect non-PII receipt markers. Only mark `ISSUED` when HYP returned a confirmed document; distinguish `email_acknowledged` (provider accepted sending) from **actual client inbox delivery**.
-5. Retrieve official HYP document number/PDF URL from HYP or private document source, if possible; do not fabricate numbers. If not retrieved, note `מספר מסמך טרם אומת`.
-6. Sync the **existing private 2026 ledger** through `src/ledger-sync.mjs` automatically after successful HYP issuance **only if Google authorization is configured**. The ledger has fixed ID `1b6aXwgN1RWVUXTiEU6AcENkXFM_xDDrL3QkyHLw9204`, tab `הכנסות והוצאות BIT/PAYBOX 2026`, columns A–J. The sync records paid date, business category, legal client name, payment method, amount, HYP issuance, mail acknowledgement and provider document number/PDF when returned. Keep formulas/totals and preserve all previous income entries. If not configured, explicitly report `ledger_not_configured` and never imply the sync occurred. Fallback to manual connector updates only after actual readback and duplicate review.
-7. If payer is an ad-generated lead, update its CRM sheet as a separate scoped operation; avoid sending Meta CRM event without the owner's authorization / existing protocol. Referrals, treks, coaching are not campaign leads by default.
-8. The accounting official record is HYP. PDF backups should use HYP's built-in private Google Drive backup when enabled. The private ledger is NOT a replacement for issued legal documents.
-9. Report compactly: number issued, amounts, client, date, email acknowledged versus confirmed delivery, **separate HYP issuance from Sheets sync**, ledger location and remaining unverified details. If the Google write fails after HYP issuance, label as `LEDGER_PENDING` and run the read-only reconciliation path; **never issue the receipt again**. No self-copy email necessary by default.
+## קבלה רשמית — רק אחרי כסף שהתקבל
+1. לקלוט מטקסט, שיחה או צילום את שם הלקוח **לפי היישות המשלמת/הלקוח החוזי**, הסכום, תאריך קבלה בפועל, אמצעי התשלום (Bit / PayBox / בנק), תיאור, מייל לקוח מאומת ואסמכתה ייחודית.
+2. צילום בסטטוס ממתין אינו אישור גבייה. אמירה מפורשת של בעלת העסק ״קיבלתי כסף, תוציאי קבלה״ מאשרת גבייה והפקה; אירוע יומן או דרישת תשלום אינם מאשרים גבייה.
+3. לבדוק כפילויות מול בקשות מוצפנות קיימות, מזהי HMAC וסטטוסים ב-GitHub, גיליון פרטי ו-HYP. אם סטטוס RESERVED, RECONCILE_WITH_HYP, ISSUED או ISSUED_CHECK_DELIVERY, לא להנפיק שוב. במקרה של אי ודאות לבדוק קודם ב-HYP.
+4. להפיק דרך הנתיב היחיד המאושר: בקשה מוצפנת עם המפתח הציבורי מתוך keys/receipt_queue_public.pem לתיקיית requests/, דרך .github/workflows/receipts-production.yml ו-src/receipt-issue-once.mjs; HYP production, מסמך type 400 בלבד.
+5. לאחר הנפקה ב-HYP, לאמת תוצאת ISSUE, מספר מסמך ו-PDF כאשר אפשר, ולדווח במפורש על חסרים. email_acknowledged מציין ש-HYP קיבלה בקשת שליחה, לא שהמייל הגיע לתיבת הלקוח.
+6. רק התקבול שהתקבל נרשם בגיליון **רישום קבלות שיר 26** (ID 1b6aXwgN1RWVUXTiEU6AcENkXFM_xDDrL3QkyHLw9204), בלשונית הכנסות והוצאות BIT/PAYBOX 2026; לא ליצור גיליון נוסף. זהו גיליון מעקב תפעולי, בעוד HYP הוא מקור האמת למסמך הרשמי.
+7. סנכרון אוטומטי לגיליון מחייב Google Sheets Credentials תקפים **בתוך GitHub Actions**. אין להסיק מהחיבור של Google Drive לצ'אט שגם GitHub מחובר. src/ledger-sync.mjs וה-workflow של ledger-reconcile מטפלים רק בקבלות שכבר הונפקו, לעולם לא מנפיקים שוב. כתיבה: שמירת שורות קיימות, בדיקת כפילות, הוספה לפני סיכומים, עדכון נוסחאות, אימות חוזר, ושמירת מזהה סנכרון אטום בהערות.
+8. אם סנכרון נכשל, לדווח LEDGER_PENDING או NOT_CONFIGURED ולא ״סונכרן״. לא להפעיל שוב HYP כדי לתקן שגיאת גיליון.
+9. אם יש דרישת תשלום קודמת, להתאים את סכום התקבול אליה בניהול פרטי. **כיום אין חיבור אוטומטי בין דרישת התשלום העצמאית לקבלה או לגיליון**; אין להמציא סגירה אוטומטית.
 
-## Before payment / proposal / work order / milestones
-- **Payment milestones / installments (mandatory policy):** See [MILESTONE_BILLING_PROTOCOL_HE.md](../../docs/MILESTONE_BILLING_PROTOCOL_HE.md). For a staged project, approve the entire payment schedule with the client first, then issue one transaction invoice (HYP type 300) for each **currently due** milestone and a separate receipt (type 400) for each confirmed incoming payment. Never invoice both the full deal and each identical milestone; a single full-deal invoice with a payment plan is an alternative, not an additional layer. Milestone automation is not yet implemented. No demand can be dispatched solely because a calendar reminder fired.
-- Determine if the user asks for `הצעת מחיר`, `הזמנת עבודה`, or `חשבונית עסקה (דרישת תשלום)`. These documents are **not receipts**. Do not issue a receipt until owner-confirmed payment or verified payment provider webhook.
-- For a signed/accepted offer, source the current agreed scope/amount/milestones from approved client proposal/Drive/calendar; do not treat tentative draft or calendar appointment as a signed payment agreement.
-- Use HYP's quote or proforma flow after confirming supported document type and provider API schema; do not guess document type numeric IDs. Client-facing email must be explicitly authorized before sending a new demand.
-- Payment link/card collection is only available when enabled by HYP/acquirer; HYP document API alone does **not** charge the customer. Manual Bit/PayBox receipt requires owner's explicit confirmation; an authentic integrated payment-provider webhook can enable unattended matching later.
-- After verified payment, issue legal receipt once and reconcile to the preceding payment request.
+## תשלומים מדורגים
+ראו [פרוטוקול אבני דרך](../../docs/MILESTONE_BILLING_PROTOCOL_HE.md). הצעה/תוכנית תשלומים אחת מוסכמת, **דרישת תשלום עצמאית לכל שלב שמגיע לתשלום**, וקבלה רשמית אחת לכל תקבול שהגיע בפועל. בתשלום חלקי מוציאים קבלה רק על מה שהתקבל; יתרה נשארת לתשלום. אין דרישה מחדש בגין סכום שכבר שולם.
 
-## Privacy / quality
-- Never log or post client financial details to PUBLIC GitHub.
-- Do not assume you receive a copy of customer emails. The owner can enable copy-to-self in HYP: `הגדרות → ניהול ספרים והגדרות ייצוא → כתובת מייל אליה ישלח העתק נוסף מכל מסמך`. The owner currently prefers avoiding receipt inbox clutter; do not enable without request.
-- Report only what tools verified; if a connector is missing, do not claim an automatic Drive/Sheet sync exists.
-- Do not automatically issue invoices or receipts due to calendar reminders alone.
-- This SKILL.md provides a repository-based operational protocol; it is **not** proof that a custom ChatGPT plugin was installed or auto-runs in every chat.
+## אבטחה ובקרה
+- אין להעלות ל-GitHub הציבורי פרטי לקוחות, בנק, סכומים מזהים לעסקה, מיילים אישיים, PDF מקור או מפתחות. קבלות עוברות אך ורק דרך הצפנה מוצפנת וסטטוס ציבורי אטום.
+- לא לשנות, לבטל או למחוק מסמכים ישנים מ-HYP כחלק מעדכון הסקיל. תיקוני מסמכים היסטוריים דורשים טיפול מפוקח נפרד, לפי נהלי HYP והנהלת החשבונות.
+- אין להפעיל שידור מסמכים ללקוח או ביצוע גבייה אוטומטית בלי הרשאה. התבנית היא מסמך מקומי, לא שירות סליקה ולא מערכת לשליחה.
+- דיווח סופי יבחין בין: דרישה הוכנה/נשלחה, תשלום התקבל, קבלה רשמית הופקה, משלוח אומת על ידי HYP, קבלה נמצאה בתיבת הלקוח (אם נבדק), גיליון סונכרן או דורש טיפול.
+- אין להציג סכום מצטבר שנתי כ״הכנסות היום״. שורות מסומנות לבדיקה אינן הכנסה עסקית מאומתת.
+- פעילות פרסום, Meta CRM, שינוי הצעות מחיר ואוטומציה של טריגרים ביומן אינם חלק מהסקיל.
+- קיום הקובץ ב-GitHub אינו מעיד על התקנת Plugin מתמשך ב-ChatGPT.
 
-## Automation contract: HYP -> existing Google Sheet
-- **HYP is accounting truth, Sheets is an operational mirror.** Never describe an annual spreadsheet total as today's income. Only count confirmed business entries, and flag rows marked `לבדיקה` separately.
-- The production receipt workflow invokes `executeReceipt` once. After HYP returns `ISSUED`, `src/receipt-executor.mjs` persists the opaque state in GitHub first and then runs `src/ledger-sync.mjs`. Ledger failure must never cause HYP re-issuance. Preserve HYP's document number and verified PDF link privately in the Sheet when returned; never write them to public GitHub state/logs.
-- The read-only recovery workflow `.github/workflows/ledger-reconcile.yml` scans encrypted requests plus opaque HYP status (only `ISSUED`/`ISSUED_CHECK_DELIVERY`) every hour, and adds/reconciles missing ledger rows. It **does not call HYP to create any document**, and cannot recover a prior provider document number that was not captured.
-- Sync only after checking the exact existing tab's header and summary formulas. The idempotency token `HYP_SYNC_ID:<opaque HMAC>` is stored only in private column J. An existing row with that token is never inserted again. One uniquely matching legacy row (same date, legal client, method and amount, already marked receipted) may be adopted rather than duplicated; ambiguous matches stop for review.
-- New income is inserted directly **above** the `סה״כ` row. Formula ranges are extended and method subtotals recalculated. Preserve distinct totals for Bit, PayBox and bank transfers; verify after the write. Never overwrite summary or historical rows, and never add a new private workbook.
-- Google Sheets auth is optional but **must be explicitly configured** in GitHub Actions Secrets: `GOOGLE_SHEETS_SERVICE_ACCOUNT_JSON_B64` with Editor access to this one Sheet, **or** `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_REFRESH_TOKEN` with Sheets edit scope. Do not copy tokens into public code, issues, Actions logs or chats. Without working credentials, only HYP issuance is automated; Sheets sync stays unconfigured.
-- Keep future-year entries out of the 2026 sheet. Create/verify the next year's ledger and its mapping before allowing 2027 write operations.
-- HYP email acknowledgement means the provider accepted an email request; it does **not** prove inbox delivery. Confirm the legal name and business identifier from the payer's instruction, not from a person's WhatsApp display name. For bank transfers, record the transfer's reference and payer bank details separately from the business's receiving bank account.
-- If an HYP payment-demand/invoice was issued under a different customer name, do not silently cancel/replace it as part of receipt synchronization. Flag a separate customer/document correction workflow and follow the accountant's/HYP's formal procedure. Never generate a second open payment demand for an already-paid 400 ₪ transaction.
-- The existing GitHub public skill file does not, by itself, install a persistent ChatGPT plugin. AI can follow this workflow when invoked; unattended background sync only starts once GitHub credentials and the workflow have been deployed and verified. No unverified claims of full automation.
+## נתיבי קוד פעילים
+- דרישת תשלום עצמאית: templates/yourway-payment-request.html
+- קבלות HYP בלבד: .github/workflows/receipts-production.yml, src/receipt-issue-once.mjs, src/hyp.mjs
+- גיליון פרטי: src/ledger-sync.mjs, src/ledger-reconcile-once.mjs, .github/workflows/ledger-reconcile.yml
