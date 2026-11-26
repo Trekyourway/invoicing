@@ -2,6 +2,7 @@ import crypto from 'node:crypto';
 import {readdir,readFile} from 'node:fs/promises';
 import {createGitHubState} from './gh-receipt-state.mjs';
 import {sanityProviderResult,assertProviderEnabled} from './policy.mjs';
+import {encryptPrivateResult} from './private-result.mjs';
 
 const env=process.env;
 const EMAIL=/^[^@\s]+@[^@\s]+\.[^@\s]+$/;
@@ -22,6 +23,9 @@ function validate(p) {
   if(typeof p.customer_email!=='string'||!EMAIL.test(p.customer_email)||p.customer_email.length>254)throw Error('Invalid recipient');
   if(typeof p.description!=='string'||!p.description.trim()||p.description.length>280)throw Error('Invalid description');
   if(p.currency!=='ILS'||!Number.isFinite(p.amount_ils)||p.amount_ils<=0||p.amount_ils>1000000||Math.round(p.amount_ils*100)!==p.amount_ils*100)throw Error('Invalid amount');
+  if(p.delivery_mode!==undefined && !['provider_email','owner_manual'].includes(p.delivery_mode))throw Error('Invalid delivery mode');
+  if(p.billing_company_number!==undefined && !/^\d{9}$/.test(String(p.billing_company_number)))throw Error('Invalid company number');
+  for(const k of ['service_recipient','contact_person'])if(p[k]!==undefined&&(typeof p[k]!=='string'||!p[k].trim()||p[k].length>100))throw Error('Invalid contact detail');
   if(!p.bank||bankFields.some(k=>typeof p.bank[k]!=='string'||!p.bank[k].trim()||p.bank[k].length>80))throw Error('Invalid bank details');
   if(!/^\d{1,3}$/.test(p.bank.bank_code)||!/^\d{1,3}$/.test(p.bank.branch)||!/^\d{4,20}$/.test(p.bank.account))throw Error('Invalid bank identifiers');
   return p;
@@ -32,14 +36,16 @@ export function createDemandPayload(p,{environment=env,transactionId}={}){
   if(environment.HYP_ENV!=='production'||!environment.HYP_API_KEY||!environment.HYP_API_EMAIL||!environment.HYP_DEVELOPER_EMAIL)throw Error('Production configuration missing');
   if(!/^[a-f0-9]{64}$/.test(transactionId||''))throw Error('Invalid transaction ID');
   const bank='פרטי העברה בנקאית: '+p.bank.bank_name+' (קוד '+p.bank.bank_code+'), סניף '+p.bank.branch+', חשבון '+p.bank.account+', מוטב: '+p.bank.account_holder+'.';
+  const ownerManual=p.delivery_mode==='owner_manual';
+  const identity=[p.billing_company_number?'ח"פ '+p.billing_company_number:'',p.service_recipient?'מקבל השירות: '+p.service_recipient:'',p.contact_person?'איש קשר: '+p.contact_person:''].filter(Boolean).join('. ');
   return {
     api_key:environment.HYP_API_KEY,api_email:environment.HYP_API_EMAIL,developer_email:environment.HYP_DEVELOPER_EMAIL,
     type:300,transaction_id:'dem-'+transactionId.slice(0,40),
     customer_name:p.customer_name.trim(),customer_email:p.customer_email.trim().toLowerCase(),
-    dont_send_email:0,currency:'ILS',
+    dont_send_email:ownerManual?1:0,currency:'ILS',
     item:[{details:p.description.trim(),amount:1,price:p.amount_ils,vat_type:'NON'}],
-    comment:'דרישת תשלום - טרם שולם. נא לבצע העברה בנקאית בלבד. '+bank,
-    email_text:'שלום, מצורפת חשבונית עסקה לתשלום על סך '+p.amount_ils+' ₪. נא לבצע העברה בנקאית בלבד. '+bank+' לאחר העברה נא לשלוח אישור העברה.'
+    comment:'דרישת תשלום - טרם שולם. '+(identity?identity+'. ':'')+'נא לבצע העברה בנקאית בלבד. '+bank,
+    ...(ownerManual?{}:{email_text:'שלום, מצורפת חשבונית עסקה לתשלום על סך '+p.amount_ils+' ₪. נא לבצע העברה בנקאית בלבד. '+bank+' לאחר העברה נא לשלוח אישור העברה.'})
   };
 }
 async function issue(p,transactionId){
@@ -49,7 +55,7 @@ async function issue(p,transactionId){
     body:JSON.stringify(payload),signal:AbortSignal.timeout(35000)
   });
   const parsed=sanityProviderResult(await response.json(),response.status);
-  return {status:parsed.status,email_acknowledged:parsed.status==='ISSUED'&&
+  return {status:parsed.status,provider:parsed,email_acknowledged:parsed.status==='ISSUED'&&
     Array.isArray(parsed.email_acknowledged)&&parsed.email_acknowledged.some(x=>typeof x==='string'&&x.trim().toLowerCase()===p.customer_email.trim().toLowerCase())};
 }
 if(process.argv[1] && import.meta.url===new URL('file://'+process.argv[1]).href){
@@ -73,10 +79,12 @@ if(process.argv[1] && import.meta.url===new URL('file://'+process.argv[1]).href)
     if(!reserved.claimed){skipped++;continue;}
     let result={status:'UNKNOWN',email_acknowledged:false};
     try{result=await issue(p,id);}catch{} // Never retry an ambiguous HYP response
-    const state={status:result.status==='ISSUED'?(result.email_acknowledged?'ISSUED':'ISSUED_CHECK_DELIVERY'):'RECONCILE_WITH_HYP',
-      email_acknowledged:result.email_acknowledged,updated_utc:new Date().toISOString()};
+    const ownerManual=p.delivery_mode==='owner_manual';
+    const state={status:result.status==='ISSUED'?(ownerManual?'ISSUED_HELD_FOR_OWNER':result.email_acknowledged?'ISSUED':'ISSUED_CHECK_DELIVERY'):'RECONCILE_WITH_HYP',
+      email_acknowledged:result.email_acknowledged,updated_utc:new Date().toISOString(),
+      private_result:result.status==='ISSUED'?encryptPrivateResult(result.provider,privateKey):null};
     await finish(id,reserved.sha,state);
-    if(state.status==='ISSUED')issued++;else review++;
+    if(state.status==='ISSUED'||state.status==='ISSUED_HELD_FOR_OWNER')issued++;else review++;
   }
   console.log(JSON.stringify({payment_demands_issued:issued,already_reserved:skipped,needs_review:review}));
   if(review)process.exitCode=1;
