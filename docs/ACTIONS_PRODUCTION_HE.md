@@ -1,3 +1,5 @@
+> **עדכון 26.11.2026:** הנתיב הפעיל ב-HYP מיועד לקבלות בלבד (type 400). דרישות תשלום מתבצעות מחוץ ל-HYP על בסיס תבנית עצמאית ב-templates/yourway-payment-request.html. זרימות חשבוניות HYP הוסרו.
+
 # YOURWAY | הפקת קבלות אמיתיות דרך GitHub Actions, ללא Hostinger ו-MySQL
 
 מעודכן ל-20.11.2026.
