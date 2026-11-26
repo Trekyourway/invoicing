@@ -25,7 +25,7 @@ test('standalone payment demand is original YOURWAY-style editable form, not HYP
   assert.match(html,/דרישת תשלום/);
   assert.match(html,/שיר אורן · עוסק פטור/);
   assert.match(html,/shiroren\.ai\/school/);
-  for(const phrase of ['Bit','PayBox','העברה בנקאית','הדפס \/ שמור PDF','קבלה תופק','const catalog=','const bankIDs=','window.print()'])
+  for(const phrase of ['Bit','PayBox','העברה בנקאית','הדפס \/ שמור PDF','קבלה רשמית תופק','const catalog=','const bankIDs=','window.print()'])
     assert.ok(html.includes(phrase),'missing original template feature '+phrase);
   assert.match(html,/YW-001/);
   assert.match(html,/YW-006/);
