@@ -59,7 +59,7 @@ test('separate skills declare distinct inputs, outputs and HYP boundaries',async
   assert.match(demand,/name: yourway-payment-request\n/);
   assert.match(demand,/אין הפקה ב-HYP/);
   assert.match(demand,/templates\/yourway-payment-request\.html/);
-  assert.match(demand,/אינו נרשם/);
+  assert.match(demand,/אינה נרשמת/);
   assert.match(legacy,/מסמך תאימות בלבד/);
   for(const name of ['yourway-receipt','yourway-payment-request']){
     for(const provider of ['.claude/skills/','.agents/skills/']){
