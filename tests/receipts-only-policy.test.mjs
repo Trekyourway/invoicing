@@ -47,12 +47,27 @@ test('public payment demand has no real customer, email or bank identifiers',asy
     assert.ok(new RegExp('id="'+input+'"[^>]*value=""').test(html),'unsafe prefilled input '+input);
 });
 
-test('canonical skill only authorizes HYP type 400 after payment and does not count demand as revenue',async()=>{
-  const skill=await readFile(at('skills/yourway-receipts/SKILL.md'),'utf8');
-  assert.match(skill,/HYP\/EasyCount/);
-  assert.match(skill,/type 400/);
-  assert.match(skill,/דרישת תשלום/);
-  assert.match(skill,/לא|אין/);
-  assert.match(skill,/אין לרשום דרישה שטרם שולמה בגיליון ההכנסות/);
-  assert.match(skill,/templates\/yourway-payment-request\.html/);
+test('separate skills declare distinct inputs, outputs and HYP boundaries',async()=>{
+  const receipt=await readFile(at('skills/yourway-receipt/SKILL.md'),'utf8');
+  const demand=await readFile(at('skills/yourway-payment-request/SKILL.md'),'utf8');
+  const legacy=await readFile(at('skills/yourway-receipts/SKILL.md'),'utf8');
+  assert.match(receipt,/name: yourway-receipt\n/);
+  assert.match(receipt,/type 400/);
+  assert.match(receipt,/HYP\/EasyCount/);
+  assert.match(receipt,/כפילויות/);
+  assert.match(receipt,/התקבל/);
+  assert.match(demand,/name: yourway-payment-request\n/);
+  assert.match(demand,/אין הפקה ב-HYP/);
+  assert.match(demand,/templates\/yourway-payment-request\.html/);
+  assert.match(demand,/אינו נרשם/);
+  assert.match(legacy,/מסמך תאימות בלבד/);
+  for(const name of ['yourway-receipt','yourway-payment-request']){
+    for(const provider of ['.claude/skills/','.agents/skills/']){
+      const entry=await readFile(at(provider+name+'/SKILL.md'),'utf8');
+      assert.ok(entry.includes('name: '+name));
+      assert.ok(entry.includes('skills/'+name+'/SKILL.md'));
+    }
+  }
+  const spec=await readFile(at('docs/YOURWAY_RECEIPT_AND_PAYMENT_REQUEST_SPEC_HE.md'),'utf8');
+  for(const keyword of ['ChatGPT','Claude Code','אישור בעלת העסק','PDF','תשלום'])assert.ok(spec.includes(keyword));
 });
